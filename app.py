@@ -74,7 +74,7 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
 
 
 def stream_results(content, is_pdf: bool, temperature: float = None, max_tokens: int = None):
-    """Stream OCR results as NDJSON (newline-delimited JSON)."""
+    """Stream OCR results as newline-delimited JSON."""
     yield '{"status": "processing"}\n'
     
     page_count = 0
@@ -113,7 +113,7 @@ async def process(
     temperature: Optional[float] = Query(default=None, ge=0.0, le=2.0, description="Sampling temperature (0.0-2.0)"),
     max_tokens: Optional[int] = Query(default=None, ge=1, le=32768, description="Max output tokens")
 ):
-    """Process PDF/image with streaming response to handle large files."""
+    """Process PDF/image with streaming response"""
     content = await file.read()
     is_pdf = file.filename.lower().endswith(".pdf")
     
@@ -129,7 +129,7 @@ async def process_sync(
     temperature: Optional[float] = Query(default=None, ge=0.0, le=2.0, description="Sampling temperature (0.0-2.0)"),
     max_tokens: Optional[int] = Query(default=None, ge=1, le=32768, description="Max output tokens")
 ):
-    """Synchronous version - returns all results at once (for small files)."""
+    """Synchronous version"""
     content = await file.read()
     is_pdf = file.filename.lower().endswith(".pdf")
     
