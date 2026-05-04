@@ -1,58 +1,18 @@
 version: "3.9"
 
 services:
-  ocr-service:
-    build:
-      context: .
-      dockerfile: Dockerfile.vllm
-    image: ocr-vllm-custom:v0.10.2
-    container_name: ocr-service
-    runtime: nvidia
-    ipc: host
-    ports:
-      - "9001:8000"
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=${OCR_GPU_ID:-0}
-      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
-      - VLLM_USE_V1=${VLLM_USE_V1:-0}
-    volumes:
-      - ~/.cache/huggingface:/root/.cache/huggingface
-      - ${LOCAL_MODEL_DIR:-./models}:/models:ro
-    command: >
-      --model ${OCR_MODEL:-lightonai/LightOnOCR-2-1B}
-      --model-impl transformers
-      --trust-remote-code
-      --gpu-memory-utilization ${OCR_GPU_MEMORY_UTILIZATION:-0.6}
-      --limit-mm-per-prompt '{"image": 1}'
-      --mm-processor-cache-gb 0
-      --no-enable-prefix-caching
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "3"
-
   preprocess-service:
     build: .
     container_name: preprocess-service
     ports:
       - "9000:9000"
     environment:
-      - OCR_URL=http://ocr-service:8000/v1/chat/completions
+      - OCR_URL=http://172.17.0.1:${OLLAMA_PORT:-11434}/v1/chat/completions
+      - OCR_MODEL=${OCR_MODEL:-maternion/LightOnOCR-2:1b}
       - OCR_TEMPERATURE=${OCR_TEMPERATURE:-0.2}
       - OCR_MAX_TOKENS=${OCR_MAX_TOKENS:-2048}
       - OCR_TOP_P=${OCR_TOP_P:-0.9}
       - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
-    depends_on:
-      ocr-service:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]

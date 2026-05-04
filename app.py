@@ -31,7 +31,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OCR_URL = os.getenv("OCR_URL", "http://ocr-service:8000/v1/chat/completions")
+OCR_URL = os.getenv("OCR_URL", "http://ollama:11434/v1/chat/completions")
+OCR_MODEL = os.getenv("OCR_MODEL", "minicpm-v")
 
 # Default values
 DEFAULT_TEMPERATURE = float(os.getenv("OCR_TEMPERATURE", "0.2"))
@@ -67,7 +68,7 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
     image_bytes = None
 
     payload = {
-        "model": "lightonai/LightOnOCR-2-1B",
+        "model": OCR_MODEL,
         "messages": [
             {
                 "role": "user",
