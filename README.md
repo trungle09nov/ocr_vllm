@@ -130,15 +130,14 @@ Browser nhan streaming -> hien thi + export
 
 Nguyen nhan thuong gap:
 
-- vLLM version khong tuong thich voi model multimodal
-- `OCR_MODEL` tro sai den thu muc local (thieu `config.json`, `tokenizer.json`, `processor_config.json`)
 
 Cach xu ly nhanh:
 
-1. Dung image moi hon qua bien `OCR_VLLM_IMAGE` (mac dinh da la `vllm/vllm-openai:latest`).
-2. Thu chay voi model ID tu Hugging Face truoc:
+1. Neu gap loi CUDA `Error 804: forward compatibility was attempted on non supported HW`, pin image ve `vllm/vllm-openai:v0.10.2` qua bien `OCR_VLLM_IMAGE`.
+2. Neu can, cap nhat NVIDIA driver tren host de tuong thich voi image CUDA moi hon.
+3. Thu chay voi model ID tu Hugging Face truoc:
 	- `OCR_MODEL=lightonai/LightOnOCR-2-1B`
-3. Neu dung local model, dam bao duong dan mount dung:
+4. Neu dung local model, dam bao duong dan mount dung:
 	- host: `LOCAL_MODEL_DIR=/duong-dan/model`
 	- container: `OCR_MODEL=/models/LightOnOCR-2-1B` (hoac dung ten thu muc thuc te)
 
