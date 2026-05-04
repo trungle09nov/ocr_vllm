@@ -11,6 +11,7 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=${OCR_GPU_ID:-0}
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+      - VLLM_USE_V1=${VLLM_USE_V1:-0}
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
       - ${LOCAL_MODEL_DIR:-./models}:/models:ro
