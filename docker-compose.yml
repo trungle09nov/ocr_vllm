@@ -16,7 +16,7 @@ services:
       - ~/.cache/huggingface:/root/.cache/huggingface
       - ${LOCAL_MODEL_DIR:-./models}:/models:ro
     command: >
-      --model ${OCR_MODEL:-/models/LightOnOCR-2-1B}
+      --model ${OCR_MODEL:-lightonai/LightOnOCR-2-1B}
       --model-impl transformers
       --trust-remote-code
       --gpu-memory-utilization ${OCR_GPU_MEMORY_UTILIZATION:-0.6}
