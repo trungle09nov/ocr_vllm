@@ -2,7 +2,10 @@ version: "3.9"
 
 services:
   ocr-service:
-    image: ${OCR_VLLM_IMAGE:-vllm/vllm-openai:v0.10.2}
+    build:
+      context: .
+      dockerfile: Dockerfile.vllm
+    image: ocr-vllm-custom:v0.10.2
     container_name: ocr-service
     runtime: nvidia
     ipc: host

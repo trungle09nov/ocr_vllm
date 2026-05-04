@@ -1,0 +1,5 @@
+FROM vllm/vllm-openai:v0.10.2
+
+COPY vllm_entrypoint.py /vllm_entrypoint.py
+
+ENTRYPOINT ["python3", "/vllm_entrypoint.py"]
