@@ -71,7 +71,7 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
         "model": OCR_MODEL,
         "prompt": "Convert this document to markdown",
         "images": [b64],
-        "stream": False,
+        "stream": True,
         "options": {
             "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
             "num_predict": max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS,
@@ -80,7 +80,7 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
     }
 
     try:
-        res = requests.post(OCR_URL, json=payload, timeout=120)
+        res = requests.post(OCR_URL, json=payload, timeout=120, stream=True)
         res.raise_for_status()
     except requests.RequestException as exc:
         raise HTTPException(status_code=502, detail=f"OCR service error: {exc}") from exc
@@ -89,11 +89,18 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
     payload = None
 
     try:
-        data = res.json()
-        content = data.get("response", "")
+        content_parts = []
+        for line in res.iter_lines():
+            if not line:
+                continue
+            chunk = json.loads(line)
+            content_parts.append(chunk.get("response", ""))
+            if chunk.get("done"):
+                break
+        content = "".join(content_parts)
         return {"choices": [{"message": {"role": "assistant", "content": content}}]}
-    except ValueError as exc:
-        raise HTTPException(status_code=502, detail="OCR service returned non-JSON response") from exc
+    except (ValueError, KeyError) as exc:
+        raise HTTPException(status_code=502, detail=f"OCR service parse error: {exc}") from exc
 
 
 def stream_results(content, is_pdf: bool, temperature: float = None, max_tokens: int = None):
