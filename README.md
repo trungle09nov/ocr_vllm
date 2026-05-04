@@ -123,3 +123,27 @@ Browser -> Nginx (/ocr/) -> index.html
 														  -> ocr-service:9001 -> vLLM LightOnOCR -> markdown
 Browser nhan streaming -> hien thi + export
 ```
+
+## 6) Troubleshooting
+
+### Loi startup `pydantic ... value_error` khi chay `ocr-service`
+
+Nguyen nhan thuong gap:
+
+- vLLM version khong tuong thich voi model multimodal
+- `OCR_MODEL` tro sai den thu muc local (thieu `config.json`, `tokenizer.json`, `processor_config.json`)
+
+Cach xu ly nhanh:
+
+1. Dung image moi hon qua bien `OCR_VLLM_IMAGE` (mac dinh da la `vllm/vllm-openai:latest`).
+2. Thu chay voi model ID tu Hugging Face truoc:
+	- `OCR_MODEL=lightonai/LightOnOCR-2-1B`
+3. Neu dung local model, dam bao duong dan mount dung:
+	- host: `LOCAL_MODEL_DIR=/duong-dan/model`
+	- container: `OCR_MODEL=/models/LightOnOCR-2-1B` (hoac dung ten thu muc thuc te)
+
+Log kiem tra:
+
+```bash
+docker compose logs -f ocr-service
+```

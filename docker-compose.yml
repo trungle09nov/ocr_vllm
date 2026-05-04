@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   ocr-service:
-    image: vllm/vllm-openai:v0.10.2
+    image: ${OCR_VLLM_IMAGE:-vllm/vllm-openai:latest}
     container_name: ocr-service
     runtime: nvidia
     ipc: host
@@ -16,6 +16,7 @@ services:
       - ${LOCAL_MODEL_DIR:-./models}:/models:ro
     command: >
       --model ${OCR_MODEL:-/models/LightOnOCR-2-1B}
+      --trust-remote-code
       --gpu-memory-utilization ${OCR_GPU_MEMORY_UTILIZATION:-0.6}
       --limit-mm-per-prompt '{"image": 1}'
       --mm-processor-cache-gb 0
