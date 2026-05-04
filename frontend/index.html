@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <span class="text-xl">&#128196;</span>
+      <h1 class="text-base font-semibold tracking-tight">OCR Tool</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="status-bar" class="text-xs text-gray-400 hidden"></span>
+      <button id="btn-settings" class="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition" title="Cai dat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Settings Modal -->
+  <div id="modal-settings" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <h2 class="text-base font-semibold mb-5">Cai dat</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Backend URL</label>
+          <input id="input-api-url" type="text"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="http://localhost:9000">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+            <input id="input-temperature" type="number" min="0" max="2" step="0.1"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Max Tokens</label>
+            <input id="input-max-tokens" type="number" min="1" max="32768"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button id="btn-settings-cancel" class="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 transition">Huy</button>
+        <button id="btn-settings-save" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">Luu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="max-w-screen-xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Upload zone -->
+    <div id="upload-zone"
+      class="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer">
+      <input type="file" id="file-input" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.tiff" class="hidden">
+      <div class="flex flex-col items-center gap-3 pointer-events-none">
+        <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl">&#128206;</div>
+        <div>
+          <p class="text-sm font-medium text-gray-700">Keo tha file vao day hoac <span class="text-indigo-600 font-semibold">chon file</span></p>
+          <p class="text-xs text-gray-400 mt-1">PDF, PNG, JPG, WEBP, TIFF &mdash; nhieu file cung luc</p>
+        </div>
+      </div>
+      <button id="btn-start"
+        class="hidden pointer-events-auto mt-4 px-6 py-2 bg-indigo-600 text-white text-sm rounded-xl font-medium hover:bg-indigo-700 transition">
+        Bat dau OCR
+      </button>
+    </div>
+
+    <!-- File queue -->
+    <div id="file-queue" class="hidden">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Hang doi &mdash; <span id="queue-count">0</span> file
+        </p>
+        <button id="btn-clear-queue" class="text-xs text-gray-400 hover:text-red-500 transition">Xoa tat ca</button>
+      </div>
+      <div id="queue-list" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="results-section" class="hidden">
+
+      <!-- File tabs -->
+      <div class="overflow-x-auto pb-1 mb-4">
+        <div id="result-tabs" class="flex gap-2 min-w-max"></div>
+      </div>
+
+      <!-- Panel -->
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+
+        <!-- Toolbar -->
+        <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-100">
+
+          <!-- View toggle -->
+          <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button class="view-btn active" data-view="split">Split</button>
+            <button class="view-btn" data-view="markdown">Markdown</button>
+            <button class="view-btn" data-view="raw">Raw</button>
+          </div>
+
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[160px]">
+            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input id="search-input" type="text" placeholder="Tim kiem..."
+              class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 ml-auto">
+            <button id="btn-select-all" class="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition">Chon tat ca</button>
+            <button id="btn-copy-all" class="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition">Copy all</button>
+            <!-- Export dropdown -->
+            <div class="relative">
+              <button id="btn-export" class="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-1">
+                Export
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div id="export-menu" class="hidden absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-10 w-44">
+                <button class="export-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50" data-format="md">Markdown (.md)</button>
+                <button class="export-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50" data-format="csv">CSV (.csv)</button>
+                <button class="export-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50" data-format="xlsx">Excel (.xlsx)</button>
+                <hr class="my-1 border-gray-100">
+                <button class="export-btn w-full text-left px-4 py-2 text-sm hover:bg-gray-50" data-format="md-all">Merge tat ca (.md)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pages container -->
+        <div id="pages-container"></div>
+
+        <!-- Empty state while loading -->
+        <div id="loading-state" class="hidden py-16 text-center">
+          <div class="inline-block animate-spin text-3xl mb-3">&#9881;</div>
+          <p class="text-sm text-gray-400">Dang xu ly...</p>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- App modules -->
+  <script src="js/uploader.js"></script>
+  <script src="js/ocr-client.js"></script>
+  <script src="js/exporter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -32,7 +32,7 @@ services:
         max-file: "3"
 
   preprocess-service:
-    build: ./preprocess
+    build: .
     container_name: preprocess-service
     ports:
       - "9000:9000"
@@ -40,6 +40,8 @@ services:
       - OCR_URL=http://ocr-service:8000/v1/chat/completions
       - OCR_TEMPERATURE=${OCR_TEMPERATURE:-0.2}
       - OCR_MAX_TOKENS=${OCR_MAX_TOKENS:-2048}
+      - OCR_TOP_P=${OCR_TOP_P:-0.9}
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-*}
     depends_on:
       ocr-service:
         condition: service_healthy

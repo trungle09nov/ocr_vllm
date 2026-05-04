@@ -1,5 +1,6 @@
 import fitz  # pymupdf
-from fastapi import FastAPI, UploadFile, File, Form, Query
+from fastapi import FastAPI, UploadFile, File, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from typing import Optional
 import base64
@@ -9,6 +10,26 @@ import gc
 import os
 
 app = FastAPI()
+
+
+def parse_cors_origins(raw_origins: str):
+    """Parse comma-separated origins from env, defaulting to wildcard."""
+    if not raw_origins:
+        return ["*"]
+
+    origins = [item.strip() for item in raw_origins.split(",") if item.strip()]
+    return origins or ["*"]
+
+
+CORS_ALLOW_ORIGINS = parse_cors_origins(os.getenv("CORS_ALLOW_ORIGINS", "*"))
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ALLOW_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 OCR_URL = os.getenv("OCR_URL", "http://ocr-service:8000/v1/chat/completions")
 
@@ -64,13 +85,20 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
         "top_p": DEFAULT_TOP_P
     }
 
-    res = requests.post(OCR_URL, json=payload, timeout=120)
+    try:
+        res = requests.post(OCR_URL, json=payload, timeout=120)
+        res.raise_for_status()
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=502, detail=f"OCR service error: {exc}") from exc
     
     # Clear payload to free b64 string
     b64 = None
     payload = None
     
-    return res.json()
+    try:
+        return res.json()
+    except ValueError as exc:
+        raise HTTPException(status_code=502, detail="OCR service returned non-JSON response") from exc
 
 
 def stream_results(content, is_pdf: bool, temperature: float = None, max_tokens: int = None):
@@ -105,6 +133,11 @@ def stream_results(content, is_pdf: bool, temperature: float = None, max_tokens:
     gc.collect()
     
     yield json.dumps({"status": "done", "total_pages": page_count}) + "\n"
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 
 @app.post("/process")
