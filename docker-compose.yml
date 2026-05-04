@@ -6,7 +6,7 @@ services:
     container_name: preprocess-service
     network_mode: host
     environment:
-      - OCR_URL=http://localhost:${OLLAMA_PORT:-11434}/api/chat
+      - OCR_URL=http://localhost:${OLLAMA_PORT:-11434}/api/generate
       - OCR_MODEL=${OCR_MODEL:-maternion/LightOnOCR-2:1b}
       - OCR_TEMPERATURE=${OCR_TEMPERATURE:-0.2}
       - OCR_MAX_TOKENS=${OCR_MAX_TOKENS:-2048}

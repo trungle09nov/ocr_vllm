@@ -31,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OCR_URL = os.getenv("OCR_URL", "http://172.17.0.1:11434/api/chat")
+OCR_URL = os.getenv("OCR_URL", "http://localhost:11434/api/generate")
 OCR_MODEL = os.getenv("OCR_MODEL", "maternion/LightOnOCR-2:1b")
 
 # Default values
@@ -69,19 +69,14 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
 
     payload = {
         "model": OCR_MODEL,
-        "messages": [
-            {
-                "role": "user",
-                "content": "Convert this document to markdown",
-                "images": [b64]
-            }
-        ],
+        "prompt": "Convert this document to markdown",
+        "images": [b64],
+        "stream": False,
         "options": {
             "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
             "num_predict": max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS,
             "top_p": DEFAULT_TOP_P
-        },
-        "stream": False
+        }
     }
 
     try:
@@ -95,8 +90,7 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
 
     try:
         data = res.json()
-        # Normalize to OpenAI-like structure for consistent response format
-        content = data.get("message", {}).get("content", "")
+        content = data.get("response", "")
         return {"choices": [{"message": {"role": "assistant", "content": content}}]}
     except ValueError as exc:
         raise HTTPException(status_code=502, detail="OCR service returned non-JSON response") from exc
