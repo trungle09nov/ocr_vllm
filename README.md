@@ -22,7 +22,11 @@ cp .env.example .env
 
 Cap nhat cac bien sau trong `.env`:
 
-- `HUGGING_FACE_HUB_TOKEN`
+- `OCR_GPU_ID` (vi du: `0` de pin vao GPU 0)
+- `OCR_GPU_MEMORY_UTILIZATION` (vi du: `0.6` de gioi han VRAM)
+- `LOCAL_MODEL_DIR` (duong dan host chua model local)
+- `OCR_MODEL` (duong dan model trong container, mac dinh `/models/LightOnOCR-2-1B`)
+- `HUGGING_FACE_HUB_TOKEN` (chi can khi khong dung model local)
 - `OCR_TEMPERATURE`
 - `OCR_MAX_TOKENS`
 - `OCR_TOP_P`

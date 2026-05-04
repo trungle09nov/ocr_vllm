@@ -2,19 +2,21 @@ version: "3.9"
 
 services:
   ocr-service:
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:v0.10.2
     container_name: ocr-service
     runtime: nvidia
     ipc: host
     ports:
       - "9001:8000"
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - NVIDIA_VISIBLE_DEVICES=${OCR_GPU_ID:-0}
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
+      - ${LOCAL_MODEL_DIR:-./models}:/models:ro
     command: >
-      --model lightonai/LightOnOCR-2-1B
+      --model ${OCR_MODEL:-/models/LightOnOCR-2-1B}
+      --gpu-memory-utilization ${OCR_GPU_MEMORY_UTILIZATION:-0.6}
       --limit-mm-per-prompt '{"image": 1}'
       --mm-processor-cache-gb 0
       --no-enable-prefix-caching
