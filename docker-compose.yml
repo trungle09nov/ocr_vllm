@@ -7,7 +7,7 @@ services:
     ports:
       - "9000:9000"
     environment:
-      - OCR_URL=http://172.17.0.1:${OLLAMA_PORT:-11434}/v1/chat/completions
+      - OCR_URL=http://172.17.0.1:${OLLAMA_PORT:-11434}/api/chat
       - OCR_MODEL=${OCR_MODEL:-maternion/LightOnOCR-2:1b}
       - OCR_TEMPERATURE=${OCR_TEMPERATURE:-0.2}
       - OCR_MAX_TOKENS=${OCR_MAX_TOKENS:-2048}

@@ -31,8 +31,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OCR_URL = os.getenv("OCR_URL", "http://ollama:11434/v1/chat/completions")
-OCR_MODEL = os.getenv("OCR_MODEL", "minicpm-v")
+OCR_URL = os.getenv("OCR_URL", "http://172.17.0.1:11434/api/chat")
+OCR_MODEL = os.getenv("OCR_MODEL", "maternion/LightOnOCR-2:1b")
 
 # Default values
 DEFAULT_TEMPERATURE = float(os.getenv("OCR_TEMPERATURE", "0.2"))
@@ -72,18 +72,16 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
         "messages": [
             {
                 "role": "user",
-                "content": [
-                    {"type": "text", "text": "Convert this document to markdown"},
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/png;base64,{b64}"}
-                    }
-                ]
+                "content": "Convert this document to markdown",
+                "images": [b64]
             }
         ],
-        "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
-        "max_tokens": max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS,
-        "top_p": DEFAULT_TOP_P
+        "options": {
+            "temperature": temperature if temperature is not None else DEFAULT_TEMPERATURE,
+            "num_predict": max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS,
+            "top_p": DEFAULT_TOP_P
+        },
+        "stream": False
     }
 
     try:
@@ -91,13 +89,15 @@ def call_ocr(image_bytes, temperature: float = None, max_tokens: int = None):
         res.raise_for_status()
     except requests.RequestException as exc:
         raise HTTPException(status_code=502, detail=f"OCR service error: {exc}") from exc
-    
-    # Clear payload to free b64 string
+
     b64 = None
     payload = None
-    
+
     try:
-        return res.json()
+        data = res.json()
+        # Normalize to OpenAI-like structure for consistent response format
+        content = data.get("message", {}).get("content", "")
+        return {"choices": [{"message": {"role": "assistant", "content": content}}]}
     except ValueError as exc:
         raise HTTPException(status_code=502, detail="OCR service returned non-JSON response") from exc
 
